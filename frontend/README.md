@@ -1,0 +1,1 @@
+A Digital Product Passport (DPP) is a digital record for a physical product that provides a detailed, tamper-resistant history of its materials, supply chain, environmental impact, and lifecycle information to enhance transparency, sustainability, and compliance

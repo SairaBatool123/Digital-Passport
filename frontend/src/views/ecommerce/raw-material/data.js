@@ -1,0 +1,31 @@
+export const rawMaterialsData = [
+  {
+    id: 1,
+    materialName: 'Aluminum Sheet',
+    materialId: 'RM-201',
+    supplier: 'Global Metals Ltd.',
+    originCountry: 'Germany',
+    quantity: 500,
+    status: 'Available',
+  },
+  { id: 2, materialName: 'Copper Wire', materialId: 'RM-202', supplier: 'CopperTech', originCountry: 'USA', quantity: 300, status: 'Low Stock' },
+  {
+    id: 3,
+    materialName: 'Plastic Granules',
+    materialId: 'RM-203',
+    supplier: 'PolyWorld',
+    originCountry: 'China',
+    quantity: 1000,
+    status: 'Available',
+  },
+  {
+    id: 4,
+    materialName: 'Lithium Battery',
+    materialId: 'RM-204',
+    supplier: 'BatteryCo',
+    originCountry: 'Japan',
+    quantity: 200,
+    status: 'Out of Stock',
+  },
+  { id: 5, materialName: 'Glass Panel', materialId: 'RM-205', supplier: 'GlassWorks', originCountry: 'France', quantity: 400, status: 'Available' },
+]

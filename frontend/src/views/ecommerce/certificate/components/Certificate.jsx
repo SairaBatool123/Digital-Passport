@@ -1,0 +1,212 @@
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
+import { Link } from 'react-router'
+import { useState } from 'react'
+import { Button, Card, CardFooter, CardHeader, Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'react-bootstrap'
+import AddCategoryModal from '@/views/ecommerce/certificate/components/AddCategoryModal'
+import { LuDownload, LuPlus, LuSearch } from 'react-icons/lu'
+import { TbChevronDown, TbEdit, TbEye, TbTrash } from 'react-icons/tb'
+import { certificate } from '@/views/ecommerce/certificate/data'
+import DataTable from '@/components/table/DataTable'
+import DeleteConfirmationModal from '@/components/table/DeleteConfirmationModal'
+import TablePagination from '@/components/table/TablePagination'
+import { useToggle } from 'usehooks-ts'
+
+const columnHelper = createColumnHelper()
+
+const CertificateCard = () => {
+  const [showModal, toggleModal] = useToggle(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [data, setData] = useState(() => [...certificate])
+  const [globalFilter, setGlobalFilter] = useState('')
+  const [sorting, setSorting] = useState([])
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 8 })
+  const [selectedRowIds, setSelectedRowIds] = useState({})
+
+  const toggleDeleteModal = () => setShowDeleteModal(!showDeleteModal)
+
+  const handleDelete = () => {
+    const selectedIds = new Set(Object.keys(selectedRowIds))
+    setData((old) => old.filter((_, idx) => !selectedIds.has(idx.toString())))
+    setSelectedRowIds({})
+    setPagination({ ...pagination, pageIndex: 0 })
+    setShowDeleteModal(false)
+  }
+
+  const columns = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          className="form-check-input form-check-input-light fs-14"
+          checked={table.getIsAllRowsSelected()}
+          onChange={table.getToggleAllRowsSelectedHandler()}
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          className="form-check-input form-check-input-light fs-14"
+          checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()}
+        />
+      ),
+      enableSorting: false,
+      enableColumnFilter: false,
+    },
+    columnHelper.accessor('productName', { header: 'Product Name' }),
+    columnHelper.accessor('brand', { header: 'Brand' }),
+    columnHelper.accessor('passportId', { header: 'Passport ID' }),
+    columnHelper.accessor('issueDate', { header: 'Issue Date' }),
+    columnHelper.accessor('expiryDate', { header: 'Expiry Date' }),
+    columnHelper.accessor('complianceStatus', { header: 'Status' }),
+    columnHelper.accessor('country', {
+      header: 'Country',
+      cell: ({ row }) => (
+        <>
+          <img src={row.original.countryFlag} alt="" className="rounded-circle me-1" height={16} width={16} /> {row.original.country}
+        </>
+      ),
+    }),
+    {
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="d-flex gap-1">
+          <Button variant="default" size="sm" className="btn-icon rounded-circle">
+            <TbEye className="fs-lg" />
+          </Button>
+          <Button variant="default" size="sm" className="btn-icon rounded-circle">
+            <TbEdit className="fs-lg" />
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            className="btn-icon rounded-circle"
+            onClick={() => {
+              toggleDeleteModal()
+              setSelectedRowIds({ [row.id]: true })
+            }}>
+            <TbTrash className="fs-lg" />
+          </Button>
+        </div>
+      ),
+    },
+  ]
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting, globalFilter, pagination, rowSelection: selectedRowIds },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
+    onRowSelectionChange: setSelectedRowIds,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    globalFilterFn: 'includesString',
+    enableColumnFilters: true,
+    enableRowSelection: true,
+  })
+
+  const pageIndex = table.getState().pagination.pageIndex
+  const pageSize = table.getState().pagination.pageSize
+  const totalItems = table.getFilteredRowModel().rows.length
+  const start = pageIndex * pageSize + 1
+  const end = Math.min(start + pageSize - 1, totalItems)
+
+  return (
+    <Card>
+      <CardHeader className="border-light d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div className="d-flex gap-2">
+          <div className="app-search">
+            <input
+              type="search"
+              className="form-control"
+              placeholder="Search certificate..."
+              value={globalFilter ?? ''}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+            />
+            <LuSearch className="app-search-icon text-muted" />
+          </div>
+          {Object.keys(selectedRowIds).length > 0 && (
+            <Button variant="danger" size="sm" onClick={toggleDeleteModal}>
+              Delete
+            </Button>
+          )}
+        </div>
+
+        <div className="d-flex align-items-center gap-2">
+          <div>
+            <select
+              className="form-select form-control my-1 my-md-0"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}>
+              {[5, 8, 10, 15, 20].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <Dropdown align="end">
+            <DropdownToggle className="btn-default drop-arrow-none">
+              <LuDownload className="me-1" /> Export <TbChevronDown className="align-middle ms-1" />
+            </DropdownToggle>
+            <DropdownMenu>
+              <DropdownItem>Export as PDF</DropdownItem>
+              <DropdownItem>Export as CSV</DropdownItem>
+              <DropdownItem>Export as Excel</DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+
+          <Button variant="primary" onClick={toggleModal}>
+            <LuPlus className="fs-sm me-1" /> Add certificate
+          </Button>
+        </div>
+      </CardHeader>
+
+      <DataTable table={table} emptyMessage="No records found" />
+
+      {table.getRowModel().rows.length > 0 && (
+        <CardFooter className="border-0">
+          <TablePagination
+            totalItems={totalItems}
+            start={start}
+            end={end}
+            itemsName="certificate"
+            showInfo
+            previousPage={table.previousPage}
+            canPreviousPage={table.getCanPreviousPage()}
+            pageCount={table.getPageCount()}
+            pageIndex={table.getState().pagination.pageIndex}
+            setPageIndex={table.setPageIndex}
+            nextPage={table.nextPage}
+            canNextPage={table.getCanNextPage()}
+          />
+        </CardFooter>
+      )}
+
+      <DeleteConfirmationModal
+        show={showDeleteModal}
+        onHide={toggleDeleteModal}
+        onConfirm={handleDelete}
+        selectedCount={Object.keys(selectedRowIds).length}
+        itemName="certificate"
+      />
+
+      <AddCategoryModal show={showModal} handleClose={toggleModal} />
+    </Card>
+  )
+}
+
+export default CertificateCard
